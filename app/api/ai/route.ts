@@ -15,11 +15,29 @@ async function callGemini(prompt: string, fallbackData: any, stage: string, retr
       temperature: 0.2,
     });
 
-    let cleanedJson = (response.choices[0]?.message?.content || '').trim();
-    if (cleanedJson.startsWith('```json')) cleanedJson = cleanedJson.substring(7);
-    if (cleanedJson.startsWith('```')) cleanedJson = cleanedJson.substring(3);
-    if (cleanedJson.endsWith('```')) cleanedJson = cleanedJson.substring(0, cleanedJson.length - 3);
+    let content = response.choices[0]?.message?.content || '';
+    
+    // Strip out DeepSeek <think> tags and their contents
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, '');
+    
+    let cleanedJson = content.trim();
+    
+    // If it's wrapped in markdown code blocks, extract just the JSON part
+    const jsonMatch = cleanedJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      cleanedJson = jsonMatch[1];
+    }
+    
     cleanedJson = cleanedJson.trim();
+    
+    // Fallback: if it still has garbage around it, try to find the first { and last }
+    if (!cleanedJson.startsWith('{') && cleanedJson.includes('{')) {
+      const start = cleanedJson.indexOf('{');
+      const end = cleanedJson.lastIndexOf('}');
+      if (start !== -1 && end !== -1) {
+        cleanedJson = cleanedJson.substring(start, end + 1);
+      }
+    }
 
     return JSON.parse(cleanedJson);
   } catch (e: any) {
