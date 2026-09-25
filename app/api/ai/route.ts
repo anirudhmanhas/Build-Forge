@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 // Initialize the Google Gen AI SDK
 const ai = new GoogleGenAI({});
 
-async function callGemini(prompt: string, fallbackData: any, stage: string) {
+async function callGemini(prompt: string, fallbackData: any, stage: string, retries = 3) {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash',
@@ -23,6 +23,13 @@ async function callGemini(prompt: string, fallbackData: any, stage: string) {
 
     return JSON.parse(cleanedJson);
   } catch (e: any) {
+    if (e.status === 503 && retries > 0) {
+      console.warn(`Gemini API 503 High Demand for stage ${stage}. Retrying... (${retries} left)`);
+      // Wait for 2 seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return callGemini(prompt, fallbackData, stage, retries - 1);
+    }
+    
     console.error(`Gemini API call failed for stage ${stage}. Error:`, e.message);
     
     // Inject the error directly into the UI so the user can see it
