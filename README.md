@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BrandForge ✦
 
-## Getting Started
+**AI-Powered Brand Identity Co-Pilot for Indie Developers & Founders**
 
-First, run the development server:
+BrandForge is a 7-stage generative AI workflow built with Next.js and the Gemini API. It transforms a raw, fragmented product idea into a fully documented, stress-tested brand architecture in minutes. Instead of just generating a generic logo or name, BrandForge acts as a virtual brand strategist, guiding you through a rigorous, professional branding process.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 The 7-Stage Workflow
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Understand:** The AI acts as a strategist, asking clarifying questions to nail down your target user and core problem.
+2. **Position:** Defines your category, value proposition, and competitive differentiator with a clear rationale.
+3. **Shape:** Establishes the brand's personality traits (and anti-traits), naming territories, and a punchy tagline.
+4. **Challenge (Red-Team):** An aggressive "Skeptical Creative Director" AI scans your decisions for startup clichés, generic fluff, and contradictions, forcing you to apply smarter alternatives.
+5. **Visualize:** Translates the strategy into a visual system—recommending typography, generating a live Google Font mock wordmark, mapping color hex codes to psychological traits, and defining visual anti-patterns.
+6. **Consistency Audit:** A final structural check ensuring all disparate decisions (voice, visuals, positioning) cohere into a single, unified identity.
+7. **Deliver & Launch:** Generates high-converting launch copy (landing page headlines, social posts, elevator pitches) written explicitly in the brand's new voice, alongside an exportable JSON/HTML Brand Kit.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+- **Styling:** Tailwind CSS (Dark Mode, Glassmorphism UI)
+- **AI Integration:** `@google/genai` (Gemini API)
+- **Language:** TypeScript
+- **State:** React Hooks (Local State / JSON Payload)
 
-## Learn More
+## ⚡ Quick Start
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set your Gemini API key in a `.env.local` file:
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+5. Open [http://localhost:3000](http://localhost:3000) and start forging your brand.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 Exporting
+At the end of the workflow, you can export your entire Brand Kit as a `.json` file for your database, or as a cleanly styled HTML page to print or share with your team.

@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { BrandProject } from '@/lib/types';
 import { IconBrain, IconWand, IconCheck, IconRocket } from '@/components/Icons';
 
+import { StageId } from '@/lib/types';
+
 interface UnderstandStageProps {
   project: BrandProject;
   updateProject: (data: Partial<BrandProject>) => void;
   onRunAi: () => Promise<void>;
   isAiLoading: boolean;
+  setCurrentStage?: (stage: StageId) => void;
 }
 
 export function UnderstandStage({
@@ -14,6 +17,7 @@ export function UnderstandStage({
   updateProject,
   onRunAi,
   isAiLoading,
+  setCurrentStage,
 }: UnderstandStageProps) {
   const understanding = project.understanding || {};
   const openQuestions = understanding.openQuestions || [];
@@ -184,6 +188,18 @@ export function UnderstandStage({
            </div>
         )}
       </div>
+
+      {isCompleted && !isAiLoading && setCurrentStage && (
+        <div className="flex justify-end pt-4">
+          <button
+            onClick={() => setCurrentStage('position')}
+            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center space-x-2 animate-in fade-in slide-in-from-bottom-2"
+          >
+            <span>Proceed to Positioning</span>
+            <IconRocket className="w-5 h-5 ml-2" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

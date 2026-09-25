@@ -15,22 +15,7 @@ import { JsonModal } from '@/components/JsonModal';
 
 const DEFAULT_PROJECT: BrandProject = {
   id: 'proj_init_01',
-  rawIdea: 'AI-Powered Brand Identity Co-Pilot for Indie Developers',
-  understanding: {
-    targetUser: 'Indie hackers, solo founders, and developer-builders launching tech products.',
-    coreProblem: 'Founders lack branding expertise, spending weeks struggling with positioning or paying heavy agency fees.',
-    constraints: '$0 design budget, 48h launch goal, need for clean copy-paste guidelines.',
-    openQuestions: [
-      'Should the brand tone lean heavily technical or broad consumer-friendly?',
-      'What specific design tokens work best for early adopter developer audiences?'
-    ]
-  },
-  positioning: {
-    category: 'AI Brand Architecture Platform',
-    differentiator: 'Automated multi-stage brand forging with built-in red-teaming critique.',
-    valueProp: 'Transform raw product concepts into battle-tested positioning, personality, visual rules, and launch kits.',
-    competitiveAngle: 'Unlike generic copy generators, BrandForge stress-tests ideas and eliminates marketing fluff.'
-  }
+  rawIdea: '',
 };
 
 export default function Home() {
@@ -205,6 +190,7 @@ export default function Home() {
               updateProject={updateProject}
               onRunAi={handleRunAi}
               isAiLoading={isAiLoading}
+              setCurrentStage={setCurrentStage}
             />
           )}
 
