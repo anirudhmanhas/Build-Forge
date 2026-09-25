@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
 import { BrandProject } from '@/lib/types';
-import { GoogleGenAI } from '@google/genai';
+import Groq from 'groq-sdk';
 
-// Initialize the Google Gen AI SDK
-const ai = new GoogleGenAI({});
+// Initialize the Groq SDK
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 async function callGemini(prompt: string, fallbackData: any, stage: string, retries = 3) {
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        temperature: 0.2,
-      }
+    const response = await groq.chat.completions.create({
+      model: 'llama3-70b-8192',
+      messages: [
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.2,
     });
 
-    let cleanedJson = (response.text || '').trim();
+    let cleanedJson = (response.choices[0]?.message?.content || '').trim();
     if (cleanedJson.startsWith('```json')) cleanedJson = cleanedJson.substring(7);
     if (cleanedJson.startsWith('```')) cleanedJson = cleanedJson.substring(3);
     if (cleanedJson.endsWith('```')) cleanedJson = cleanedJson.substring(0, cleanedJson.length - 3);
@@ -24,20 +24,20 @@ async function callGemini(prompt: string, fallbackData: any, stage: string, retr
     return JSON.parse(cleanedJson);
   } catch (e: any) {
     if (e.status === 503 && retries > 0) {
-      console.warn(`Gemini API 503 High Demand for stage ${stage}. Retrying... (${retries} left)`);
+      console.warn(`Groq API 503 High Demand for stage ${stage}. Retrying... (${retries} left)`);
       // Wait for 2 seconds before retrying
       await new Promise(resolve => setTimeout(resolve, 2000));
       return callGemini(prompt, fallbackData, stage, retries - 1);
     }
     
-    console.error(`Gemini API call failed for stage ${stage}. Error:`, e.message);
+    console.error(`Groq API call failed for stage ${stage}. Error:`, e.message);
     
     // Inject the error directly into the UI so the user can see it
     return {
       ...fallbackData,
       understanding: {
         ...fallbackData.understanding,
-        targetUser: `API ERROR DETECTED: ${e.message}. Please check your GEMINI_API_KEY.`,
+        targetUser: `API ERROR DETECTED: ${e.message}. Please check your GROQ_API_KEY.`,
       }
     };
   }
