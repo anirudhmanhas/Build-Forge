@@ -8,7 +8,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 async function callGemini(prompt: string, fallbackData: any, stage: string, retries = 3) {
   try {
     const response = await groq.chat.completions.create({
-      model: 'llama3-70b-8192',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'user', content: prompt }
       ],
