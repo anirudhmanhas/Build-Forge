@@ -6,21 +6,24 @@ export interface BrandProject {
     coreProblem?: string;
     constraints?: string;
     openQuestions?: string[];
+    qaHistory?: { question: string; answer: string }[];
   };
   positioning?: {
     category?: string;
     differentiator?: string;
+    differentiatorJustification?: string;
     valueProp?: string;
     competitiveAngle?: string;
   };
   personality?: {
-    traits?: string[]; // 3-5 traits
-    traitsToAvoid?: string[];
-    justification?: string;
+    traits?: { trait: string; justification: string }[];
+    traitsToAvoid?: { trait: string; why: string }[];
   };
   namingDirections?: {
-    name: string;
+    direction: string;
+    examples: string[];
     rationale: string;
+    selected?: boolean;
   }[];
   tagline?: string;
   onePitchLine?: string;
@@ -28,20 +31,31 @@ export interface BrandProject {
     issue: string;
     why: string;
     betterAlternative: string;
+    fieldToUpdate: string; // e.g. 'tagline', 'positioning.valueProp'
+    suggestedValue: string; // the exact new string to apply
+    status?: 'pending' | 'applied' | 'dismissed';
   }[];
   visualDirection?: {
     typographyStyle?: string;
-    colorMood?: string;
+    recommendedGoogleFont?: string; // e.g. "Inter", "Space Grotesk"
+    colorMood?: { hex: string; name: string; rationale: string }[];
     imageryStyle?: string;
+    symbolicMotifs?: string;
     shapesToAvoid?: string;
   };
   consistencyReport?: {
-    conflicts?: string[];
-    resolved?: boolean;
+    conflicts: { field: string; issue: string }[];
+    resolved: boolean;
   };
   launchAssets?: {
     landingHeadline?: string;
-    onePagePitch?: string;
+    landingSubhead?: string;
+    onePagePitch?: {
+      problem: string;
+      solution: string;
+      whyNow: string;
+      personalityOneLiner: string;
+    };
     socialPost?: string;
   };
 }

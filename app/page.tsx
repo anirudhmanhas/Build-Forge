@@ -1,69 +1,280 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { BrandProject, StageId, StageStatus } from '@/lib/types';
+import { Sidebar, STAGES } from '@/components/Sidebar';
+import { Header } from '@/components/Header';
+import { UnderstandStage } from '@/components/stages/UnderstandStage';
+import { PositionStage } from '@/components/stages/PositionStage';
+import { ShapeStage } from '@/components/stages/ShapeStage';
+import { ChallengeStage } from '@/components/stages/ChallengeStage';
+import { VisualizeStage } from '@/components/stages/VisualizeStage';
+import { ConsistencyStage } from '@/components/stages/ConsistencyStage';
+import { LaunchStage } from '@/components/stages/LaunchStage';
+import { JsonModal } from '@/components/JsonModal';
+
+const DEFAULT_PROJECT: BrandProject = {
+  id: 'proj_init_01',
+  rawIdea: 'AI-Powered Brand Identity Co-Pilot for Indie Developers',
+  understanding: {
+    targetUser: 'Indie hackers, solo founders, and developer-builders launching tech products.',
+    coreProblem: 'Founders lack branding expertise, spending weeks struggling with positioning or paying heavy agency fees.',
+    constraints: '$0 design budget, 48h launch goal, need for clean copy-paste guidelines.',
+    openQuestions: [
+      'Should the brand tone lean heavily technical or broad consumer-friendly?',
+      'What specific design tokens work best for early adopter developer audiences?'
+    ]
+  },
+  positioning: {
+    category: 'AI Brand Architecture Platform',
+    differentiator: 'Automated multi-stage brand forging with built-in red-teaming critique.',
+    valueProp: 'Transform raw product concepts into battle-tested positioning, personality, visual rules, and launch kits.',
+    competitiveAngle: 'Unlike generic copy generators, BrandForge stress-tests ideas and eliminates marketing fluff.'
+  }
+};
 
 export default function Home() {
+  const [project, setProject] = useState<BrandProject>(DEFAULT_PROJECT);
+  const [currentStage, setCurrentStage] = useState<StageId>('understand');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  // Compute stage statuses automatically from local project state
+  const computeStageStatuses = (): Record<StageId, StageStatus> => {
+    const statuses: Record<StageId, StageStatus> = {
+      understand: 'not_started',
+      position: 'not_started',
+      shape: 'not_started',
+      challenge: 'not_started',
+      visualize: 'not_started',
+      consistency: 'not_started',
+      launch: 'not_started',
+    };
+
+    // Understand status
+    const hasOpenQuestions = (project.understanding?.openQuestions?.length || 0) > 0;
+    if (project.understanding?.targetUser && project.understanding?.coreProblem && !hasOpenQuestions) {
+      statuses.understand = 'done';
+    } else if (project.understanding?.targetUser || project.understanding?.coreProblem) {
+      statuses.understand = 'in_progress';
+    }
+
+    // Position status
+    if (project.positioning?.category && project.positioning?.valueProp) {
+      statuses.position = 'done';
+    } else if (project.positioning?.category || project.positioning?.valueProp) {
+      statuses.position = 'in_progress';
+    }
+
+    // Shape status
+    const hasTraits = (project.personality?.traits?.length || 0) > 0;
+    const hasSelectedDirection = project.namingDirections?.some(d => d.selected);
+    
+    if (hasTraits && project.tagline && hasSelectedDirection) {
+      statuses.shape = 'done';
+    } else if (hasTraits || project.tagline) {
+      statuses.shape = 'in_progress';
+    }
+
+    // Challenge status
+    if (project.challengeLog !== undefined) {
+      const allResolved = project.challengeLog.every(c => c.status !== 'pending');
+      if (allResolved) {
+        statuses.challenge = 'done';
+      } else {
+        statuses.challenge = 'in_progress';
+      }
+    }
+
+    // Visualize status
+    const hasVisualTypography = !!project.visualDirection?.typographyStyle;
+    const hasColors = (project.visualDirection?.colorMood?.length || 0) > 0;
+    
+    if (hasVisualTypography && hasColors) {
+      statuses.visualize = 'done';
+    } else if (hasVisualTypography || hasColors) {
+      statuses.visualize = 'in_progress';
+    }
+
+    // Consistency status
+    if (project.consistencyReport?.resolved) {
+      statuses.consistency = 'done';
+    } else if (project.consistencyReport) {
+      statuses.consistency = 'in_progress';
+    }
+
+    // Launch status
+    if (project.launchAssets?.landingHeadline) {
+      statuses.launch = 'done';
+    } else if (project.launchAssets) {
+      statuses.launch = 'in_progress';
+    }
+
+    return statuses;
+  };
+
+  const updateProject = (data: Partial<BrandProject>) => {
+    setProject((prev) => ({
+      ...prev,
+      ...data,
+    }));
+  };
+
+  const showNotification = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleRunAi = async () => {
+    setIsAiLoading(true);
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stage: currentStage,
+          context: project,
+          project,
+        }),
+      });
+
+      const resData = await response.json();
+      if (resData.success && resData.data) {
+        updateProject(resData.data);
+        showNotification(`✨ AI synthesized insights for Stage: ${currentStage.toUpperCase()}!`);
+      } else {
+        showNotification(`⚠️ Failed to generate AI content: ${resData.error || 'Unknown error'}`);
+      }
+    } catch (err: any) {
+      showNotification(`⚠️ Network error generating AI insights: ${err?.message}`);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleResetProject = () => {
+    if (confirm('Reset project to default initial state?')) {
+      setProject({
+        id: 'proj_' + Math.random().toString(36).substring(2, 9),
+        rawIdea: 'AI-Powered Developer Tools',
+      });
+      setCurrentStage('understand');
+      showNotification('Project reset successfully.');
+    }
+  };
+
+  const stageStatuses = computeStageStatuses();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 px-4 py-2.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-xl border border-amber-400 animate-fadeIn flex items-center space-x-2">
+          <span>{notification}</span>
+        </div>
+      )}
+
+      {/* Left Sidebar Shell */}
+      <Sidebar
+        currentStage={currentStage}
+        setCurrentStage={setCurrentStage}
+        project={project}
+        stageStatuses={stageStatuses}
+        onOpenJsonModal={() => setIsJsonModalOpen(true)}
+        onRawIdeaChange={(idea) => updateProject({ rawIdea: idea })}
+      />
+
+      {/* Main Right Panel */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header Bar */}
+        <Header
+          currentStage={currentStage}
+          setCurrentStage={setCurrentStage}
+          onRunAi={handleRunAi}
+          isAiLoading={isAiLoading}
+          onResetProject={handleResetProject}
+          stageStatuses={stageStatuses}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+        {/* Stage Content Render Area */}
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-5xl mx-auto w-full space-y-6">
+          {currentStage === 'understand' && (
+            <UnderstandStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          )}
+
+          {currentStage === 'position' && (
+            <PositionStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
+            />
+          )}
+
+          {currentStage === 'shape' && (
+            <ShapeStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
+            />
+          )}
+
+          {currentStage === 'challenge' && (
+            <ChallengeStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
+            />
+          )}
+
+          {currentStage === 'visualize' && (
+            <VisualizeStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
+            />
+          )}
+
+          {currentStage === 'consistency' && (
+            <ConsistencyStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
+              setCurrentStage={setCurrentStage}
+            />
+          )}
+
+          {currentStage === 'launch' && (
+            <LaunchStage
+              project={project}
+              updateProject={updateProject}
+              onRunAi={handleRunAi}
+              isAiLoading={isAiLoading}
+            />
+          )}
+        </main>
+      </div>
+
+      {/* JSON Inspector Modal */}
+      <JsonModal
+        isOpen={isJsonModalOpen}
+        onClose={() => setIsJsonModalOpen(false)}
+        project={project}
+        onImportJson={(imported) => {
+          setProject(imported);
+          showNotification('Imported JSON state applied!');
+        }}
+      />
     </div>
   );
 }
