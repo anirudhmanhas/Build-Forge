@@ -23,8 +23,16 @@ async function callGemini(prompt: string, fallbackData: any, stage: string) {
 
     return JSON.parse(cleanedJson);
   } catch (e: any) {
-    console.warn(`Gemini API call failed for stage ${stage}, falling back to mock. Error:`, e.message);
-    return fallbackData;
+    console.error(`Gemini API call failed for stage ${stage}. Error:`, e.message);
+    
+    // Inject the error directly into the UI so the user can see it
+    return {
+      ...fallbackData,
+      understanding: {
+        ...fallbackData.understanding,
+        targetUser: `API ERROR DETECTED: ${e.message}. Please check your GEMINI_API_KEY.`,
+      }
+    };
   }
 }
 
